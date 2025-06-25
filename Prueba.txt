@@ -1,0 +1,13 @@
+/
+    home/
+        user1/
+            documents/
+                report.txt
+                notes.txt
+            pictures/
+        user2/
+            pictures/
+                vacations.jpg
+    var/
+        log/
+            syslog.txt
