@@ -11,10 +11,10 @@ enum Type {
 
 struct Tree{
     Type type;
-    void* data; // Pointer to either File or Folder
-    Tree* next; // Pointer to the next node in the linked list
-    Tree* father; // Pointer to the parent node
-    Tree* children; // Pointer to the first child node
+    void* data; // Puntero a los datos (puede ser Folder o File)
+    Tree* next; // Punter al siguiente nodo en la lista de hermanos
+    Tree* father; // Puntero al nodo padre
+    Tree* children; // Puntero al primer nodo hijo
 };
 struct Folder {
     string name;
@@ -22,11 +22,11 @@ struct Folder {
 };
 struct File {
     string name;
-    string content; // Content of the file
+    string content; // Contenido del archivo
 };
 
 // Función auxiliar para crear un nuevo nodo Tree
-Tree* createNode(Type type, const std::string& name, const std::string& content = "") {
+Tree* createNode(Type type, const string& name, const string& content = "") {
     Tree* newNode = new Tree();
     newNode->type = type;
     newNode->next = nullptr;
@@ -47,10 +47,10 @@ Tree* createNode(Type type, const std::string& name, const std::string& content 
 }
 
 // Función principal para cargar el sistema de archivos
-Tree* loadFileSystem(const std::string& filename) {
-    std::ifstream file(filename);
+Tree* loadFileSystem(string& filename) {
+    ifstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "Error: No se pudo abrir el archivo de configuración: " << filename << std::endl;
+        cerr << "Error: No se pudo abrir el archivo de configuración: " << filename << endl;
         return nullptr;
     }
 
@@ -58,10 +58,10 @@ Tree* loadFileSystem(const std::string& filename) {
     Tree* currentFolder = nullptr;
     int currentIndentation = -1; // Para rastrear la profundidad de la indentación
 
-    std::string line;
+    string line;
     while (getline(file, line)) {
         // Ignorar líneas vacías
-        if (line.empty() || line.find_first_not_of(" \t") == std::string::npos) {
+        if (line.empty() || line.find_first_not_of(" \t") == string::npos) {
             continue;
         }
 
@@ -69,20 +69,15 @@ Tree* loadFileSystem(const std::string& filename) {
         size_t firstChar = line.find_first_not_of(" \t");
         int indentation = firstChar; // Número de espacios o tabulaciones al inicio
 
-        std::string trimmedLine = line.substr(firstChar); // Línea sin indentación
+        string trimmedLine = line.substr(firstChar); // Línea sin indentación
 
         // Manejar el contenido de archivos (si tu formato lo permite)
         // Esto es una simplificación; un formato más robusto para el contenido de archivos
         // requeriría una lógica de estado más compleja (ej. "reading_file_content = true")
-        if (currentFolder != nullptr && currentFolder->type == FILE_TYPE && trimmedLine == "---EOF---") {
-            // Suponemos que hemos terminado de leer el contenido de un archivo
-            // Se debería manejar si la línea actual es parte del contenido
-            // y no un nuevo elemento de la jerarquía.
-            // Para este ejemplo, estamos asumiendo que el contenido se leería hasta una marca de fin.
-        }
+        if (currentFolder != nullptr && currentFolder->type == FILE_TYPE && trimmedLine == "---EOF---") 
 
         if (trimmedLine.back() == '/') { // Es una carpeta
-            std::string folderName = trimmedLine.substr(0, trimmedLine.length() - 1);
+            string folderName = trimmedLine.substr(0, trimmedLine.length() - 1);
             Tree* newFolderNode = createNode(FOLDER_TYPE, folderName);
 
             if (root == nullptr) { // Es la raíz
@@ -133,7 +128,7 @@ Tree* loadFileSystem(const std::string& filename) {
             Tree* newFileNode = createNode(FILE_TYPE, fileName);
 
             if (root == nullptr) {
-                std::cerr << "Error: El primer elemento no puede ser un archivo." << std::endl;
+                cerr << "Error: El primer elemento no puede ser un archivo." << endl;
                 return nullptr;
             }
 
@@ -150,7 +145,7 @@ Tree* loadFileSystem(const std::string& filename) {
                     temp->next = newFileNode;
                 }
             } else {
-                std::cerr << "Error: Archivo sin carpeta padre: " << fileName << std::endl;
+                cerr << "Error: Archivo sin carpeta padre: " << fileName << endl;
             }
 
             // Aquí es donde leerías el contenido del archivo si tu formato lo define
@@ -169,7 +164,7 @@ Tree* loadFileSystem(const std::string& filename) {
     file.close();
     return root;
 }
-/*void printFileSystem(Tree* node, int depth = 0) {
+void printFileSystem(Tree* node, int depth = 0) {
     if (node == nullptr) {
         return;
     }
@@ -181,7 +176,7 @@ Tree* loadFileSystem(const std::string& filename) {
 
     if (node->type == FOLDER_TYPE) {
         Folder* folder = static_cast<Folder*>(node->data);
-        std::cout << folder->name << "/" << std::endl;
+        cout << folder->name << "/" << std::endl;
 
         // Recorrer los hijos (carpetas y archivos)
         Tree* currentChild = node->children;
@@ -191,19 +186,20 @@ Tree* loadFileSystem(const std::string& filename) {
         }
     } else { // FILE_TYPE
         File* file = static_cast<File*>(node->data);
-        std::cout << file->name << std::endl;
+        cout << file->name << std::endl;
         // Opcional: imprimir el contenido del archivo si es relevante para la depuración
         // std::cout << "    Content: " << file->content << std::endl;
     }
-}*/
+}
 
 int main() {
-    string filename = "Prueba.txt"; // Cambia esto al nombre de tu archivo de configuración
+    string filename = "Prueba.txt"; 
     Tree* fileSystem = loadFileSystem(filename);
 
     if (fileSystem) {
         cout << "Sistema de archivos cargado correctamente." << endl;
-        // Aquí podrías implementar una función para imprimir el árbol o realizar otras operaciones
+        printFileSystem(fileSystem);
+        
     } else {
         cout << "Error al cargar el sistema de archivos." << endl;
     }
