@@ -10,4 +10,5 @@
                 vacations.jpg
     var/
         log/
-            syslog.txt
+            lol.txt
+            

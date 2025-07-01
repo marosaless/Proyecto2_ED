@@ -213,7 +213,7 @@ int main() {
     if (fileSystem) {
         cout << "Sistema de archivos cargado correctamente." << endl;
         while(option){
-            cout << "/" << getCurrentPath(root) << " ";
+            cout << getCurrentPath(root) << " ";
             cin >> comando;
  
         }
