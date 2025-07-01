@@ -192,13 +192,31 @@ void printFileSystem(Tree* node, int depth = 0) {
     }
 }
 
+string getCurrentPath(Tree* node) {
+    if (!node) return "";
+    string path = "";
+    while (node){
+        Folder* folder = static_cast<Folder*>(node->data);
+        path = "/" + folder->name + path;
+        node = node->father;
+    }
+    return path;
+}
+
 int main() {
     string filename = "Prueba.txt"; 
     Tree* fileSystem = loadFileSystem(filename);
+    Tree* root = fileSystem;
+    int option = -1; // Variable para controlar el bucle de opciones
+    string comando;
 
     if (fileSystem) {
         cout << "Sistema de archivos cargado correctamente." << endl;
-        printFileSystem(fileSystem);
+        while(option){
+            cout << "/" << getCurrentPath(root) << " ";
+            cin >> comando;
+ 
+        }
         
     } else {
         cout << "Error al cargar el sistema de archivos." << endl;
