@@ -1,4 +1,4 @@
-/
+system/
     home/
         user1/
             documents/

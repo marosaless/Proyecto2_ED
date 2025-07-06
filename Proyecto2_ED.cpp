@@ -74,7 +74,7 @@ Tree* loadFileSystem(string& filename) {
         // Manejar el contenido de archivos (si tu formato lo permite)
         // Esto es una simplificación; un formato más robusto para el contenido de archivos
         // requeriría una lógica de estado más compleja (ej. "reading_file_content = true")
-        if (currentFolder != nullptr && currentFolder->type == FILE_TYPE && trimmedLine == "---EOF---") 
+        //if (currentFolder != nullptr && currentFolder->type == FILE_TYPE && trimmedLine == "---EOF---") 
 
         if (trimmedLine.back() == '/') { // Es una carpeta
             string folderName = trimmedLine.substr(0, trimmedLine.length() - 1);
@@ -203,6 +203,25 @@ string getCurrentPath(Tree* node) {
     return path;
 }
 
+void changeDirectory(Tree*& currentFolder, const string& folderName) {
+    if (currentFolder == nullptr || currentFolder->children == nullptr) {
+        cout << "No se puede cambiar de directorio. No hay carpetas disponibles." << endl;
+        return;
+    }
+    Tree* child = currentFolder->children;
+    while (child != nullptr) {
+        if (child->type == FOLDER_TYPE) {
+            Folder* folder = static_cast<Folder*>(child->data);
+            if (folder->name == folderName) {
+                currentFolder = child;
+                return;
+            }
+        }
+        child = child->next;
+    }
+    cout << "No se encontró la carpeta: " << folderName << endl;
+}
+
 int main() {
     string filename = "Prueba.txt"; 
     Tree* fileSystem = loadFileSystem(filename);
@@ -211,11 +230,27 @@ int main() {
     string comando;
 
     if (fileSystem) {
-        cout << "Sistema de archivos cargado correctamente." << endl;
         while(option){
             cout << getCurrentPath(root) << " ";
             cin >> comando;
- 
+            if (comando == "cd") {
+                string folderName;
+                cin >> folderName;
+                changeDirectory(root, folderName);
+            }
+            else if (comando == "ls") {
+                if (root) {
+                    printFileSystem(root);
+                } else {
+                    cout << "No hay sistema de archivos cargado." << endl;
+                }   
+            }
+            else if (comando == "exit") {
+                option = 0; // Salir del bucle
+            } else {
+                cout << "Comando no reconocido: " << comando << endl;
+            }
+
         }
         
     } else {
