@@ -211,17 +211,33 @@ Tree* findFolder(Tree* node, const string& folderName) {
 }
 
 void changeDirectory(Tree*& currentFolder, const string& folderName) {
-    Tree* found = findFolder(currentFolder, folderName);
-    if (found && found->type == FOLDER_TYPE) {
-        currentFolder = found;
-    } else {
-        cout << "No se encontró la carpeta: " << folderName << endl;
+    // IMPLEMENTACION
+    if (folderName == "..") {
+        if (currentFolder->father != nullptr) {
+            currentFolder = currentFolder->father;
+        } else {
+            cout << "Ya estas en la carpeta raiz." << endl;
+        }
+        return;
     }
+
+    Tree* child = currentFolder->children;
+    while (child != nullptr) {
+        if (child->type == FOLDER_TYPE) {
+            Folder* folder = static_cast<Folder*>(child->data);
+            if (folder->name == folderName) {
+                currentFolder = child;
+                return;
+            }
+        }
+        child = child->next;
+    }
+    cout << "No se encontro la carpeta: " << folderName << endl;
 }
 
 bool findNodeAndParent(Tree* node, const string& itemName, Tree*& parent, Tree*& found) {
     if (!node) return false;
-    Tree* prev = nullptr;
+    //Tree* prev = nullptr;
     Tree* curr = node->children;
     while (curr) {
         bool match = false;
@@ -262,12 +278,53 @@ void eliminateItem(Tree*& root, const string& itemName) {
                 cout << "Carpeta eliminada: " << itemName << endl;
             else
                 cout << "Archivo eliminado: " << itemName << endl;
+            // Free the data
+            if (found->type == FOLDER_TYPE) {
+                delete static_cast<Folder*>(found->data);
+            } else {
+                delete static_cast<File*>(found->data);
+            }
             delete found;
         }
     } else {
-        cout << "No se encontró el elemento: " << itemName << endl;
+        cout << "No se encontro el elemento: " << itemName << endl;
     }
 }
+
+// IMPLEMENTACION
+void renameFolder(Tree* currentFolder, const string& oldName, const string& newName) {
+    Tree* child = currentFolder->children;
+    while (child != nullptr) {
+        if (child->type == FOLDER_TYPE) {
+            Folder* folder = static_cast<Folder*>(child->data);
+            if (folder->name == oldName) {
+                folder->name = newName;
+                cout << "Carpeta '" << oldName << "' renombrada a '" << newName << "'" << endl;
+                return;
+            }
+        }
+        child = child->next;
+    }
+    cout << "No se encontro la carpeta '" << oldName << "' en el directorio actual." << endl;
+}
+
+// IMPLEMENTACION
+void renameFile(Tree* currentFolder, const string& oldName, const string& newName) {
+    Tree* child = currentFolder->children;
+    while (child != nullptr) {
+        if (child->type == FILE_TYPE) {
+            File* file = static_cast<File*>(child->data);
+            if (file->name == oldName) {
+                file->name = newName;
+                cout << "Archivo '" << oldName << "' renombrado a '" << newName << "'" << endl;
+                return;
+            }
+        }
+        child = child->next;
+    }
+    cout << "No se encontro el archivo '" << oldName << "' en el directorio actual." << endl;
+}
+
 
 int main() {
     string filename = "Prueba.txt"; 
@@ -284,6 +341,7 @@ int main() {
             if (comando == "help") {
                 cout << "Comandos disponibles:" << endl;
                 cout << "cd <nombre_carpeta> - Cambiar a la carpeta especificada" << endl;
+                cout << "cd .. - Subir un nivel en el directorio" << endl; // Added help for "cd .."
                 cout << "ls - Listar archivos y carpetas" << endl;
                 cout << "mkdir <nombre_carpeta> - Crear una nueva carpeta" << endl;
                 cout << "rm <nombre_archivo_o_carpeta> - Eliminar un archivo o carpeta" << endl;
@@ -323,7 +381,7 @@ int main() {
             }
             else if(comando == "touch") {
                 string fileName;
-                cin >> fileName;  
+                cin >> fileName;   
                 Tree* newFile = createNode(FILE_TYPE, fileName);
                 if (root) {
                     // Agregar el nuevo archivo como hijo de la carpeta actual
@@ -331,7 +389,19 @@ int main() {
                     newFile->next = root->children;
                     root->children = newFile;
                 }
-            }  
+            }   
+            // IMPLEMENTACION
+            else if (comando == "cnfolder") {
+                string oldName, newName;
+                cin >> oldName >> newName;
+                renameFolder(root, oldName, newName);
+            }
+            // IMPLEMENTACION
+            else if (comando == "cnfile") {
+                string oldName, newName;
+                cin >> oldName >> newName;
+                renameFile(root, oldName, newName);
+            }
             else if (comando == "exit") {
                 option = 0; // Salir del bucle
             } else {
