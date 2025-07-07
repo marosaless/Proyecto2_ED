@@ -278,9 +278,21 @@ int main() {
 
     if (fileSystem) {
         while(option){
+            cout << "Ingrese un comando (help para ver opciones): "<<endl;
             cout << getCurrentPath(root) << " ";
             cin >> comando;
-            if (comando == "cd") {
+            if (comando == "help") {
+                cout << "Comandos disponibles:" << endl;
+                cout << "cd <nombre_carpeta> - Cambiar a la carpeta especificada" << endl;
+                cout << "ls - Listar archivos y carpetas" << endl;
+                cout << "mkdir <nombre_carpeta> - Crear una nueva carpeta" << endl;
+                cout << "rm <nombre_archivo_o_carpeta> - Eliminar un archivo o carpeta" << endl;
+                cout << "touch <nombre_archivo> - Crear un nuevo archivo" << endl;
+                cout << "cnfolder <nombre_carpeta_a_cambiar> <nuevo_nombre> - Cambiar el nombre de una carpeta" << endl;
+                cout << "cnfile <nombre_archivo_a_cambiar> <nuevo_nombre> - Cambiar el nombre de un archivo" << endl;
+                cout << "exit - Salir del programa" << endl;
+            } 
+            else if (comando == "cd") {
                 string folderName;
                 cin >> folderName;
                 changeDirectory(root, folderName);
