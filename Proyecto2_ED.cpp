@@ -148,16 +148,6 @@ Tree* loadFileSystem(string& filename) {
                 cerr << "Error: Archivo sin carpeta padre: " << fileName << endl;
             }
 
-            // Aquí es donde leerías el contenido del archivo si tu formato lo define
-            // Por ejemplo, si el contenido está en las siguientes líneas hasta "---EOF---"
-            string fileContent = "";
-            string contentLine;
-            // if (file.peek() == '\n') { // Si la siguiente línea es un salto de línea, podría indicar el inicio del contenido
-            //     while (std::getline(file, contentLine) && contentLine != "---EOF---") {
-            //         fileContent += contentLine + "\n";
-            //     }
-            //     static_cast<File*>(newFileNode->data)->content = fileContent;
-            // }
         }
     }
 
@@ -203,23 +193,80 @@ string getCurrentPath(Tree* node) {
     return path;
 }
 
-void changeDirectory(Tree*& currentFolder, const string& folderName) {
-    if (currentFolder == nullptr || currentFolder->children == nullptr) {
-        cout << "No se puede cambiar de directorio. No hay carpetas disponibles." << endl;
-        return;
+Tree* findFolder(Tree* node, const string& folderName) {
+    if (node == nullptr) {
+        return nullptr;
     }
-    Tree* child = currentFolder->children;
-    while (child != nullptr) {
-        if (child->type == FOLDER_TYPE) {
-            Folder* folder = static_cast<Folder*>(child->data);
-            if (folder->name == folderName) {
-                currentFolder = child;
-                return;
-            }
+    if (node->type == FOLDER_TYPE) {
+        Folder* folder = static_cast<Folder*>(node->data);
+        if (folder->name == folderName) {
+            return node;
         }
-        child = child->next;
     }
-    cout << "No se encontró la carpeta: " << folderName << endl;
+    Tree* found = findFolder(node->children, folderName);
+    if (found) {
+        return found;
+    }
+    return findFolder(node->next, folderName);
+}
+
+void changeDirectory(Tree*& currentFolder, const string& folderName) {
+    Tree* found = findFolder(currentFolder, folderName);
+    if (found && found->type == FOLDER_TYPE) {
+        currentFolder = found;
+    } else {
+        cout << "No se encontró la carpeta: " << folderName << endl;
+    }
+}
+
+bool findNodeAndParent(Tree* node, const string& itemName, Tree*& parent, Tree*& found) {
+    if (!node) return false;
+    Tree* prev = nullptr;
+    Tree* curr = node->children;
+    while (curr) {
+        bool match = false;
+        if (curr->type == FOLDER_TYPE) {
+            Folder* folder = static_cast<Folder*>(curr->data);
+            if (folder->name == itemName) match = true;
+        } else {
+            File* file = static_cast<File*>(curr->data);
+            if (file->name == itemName) match = true;
+        }
+        if (match) {
+            parent = node;
+            found = curr;
+            return true;
+        }
+        // Buscar recursivamente en hijos
+        if (findNodeAndParent(curr, itemName, parent, found)) return true;
+        curr = curr->next;
+    }
+    return false;
+}
+
+void eliminateItem(Tree*& root, const string& itemName) {
+    Tree* parent = nullptr;
+    Tree* found = nullptr;
+    if (findNodeAndParent(root, itemName, parent, found)) {
+        // Eliminar el nodo encontrado de la lista de hijos de su padre
+        Tree* prev = nullptr;
+        Tree* curr = parent->children;
+        while (curr && curr != found) {
+            prev = curr;
+            curr = curr->next;
+        }
+        if (curr == found) {
+            if (prev) prev->next = curr->next;
+            else parent->children = curr->next;
+            if (found->type == FOLDER_TYPE)
+                cout << "Carpeta eliminada: " << itemName << endl;
+            else
+                cout << "Archivo eliminado: " << itemName << endl;
+            delete found;
+        }
+    } else {
+        cout << "No se encontró el elemento: " << itemName << endl;
+    }
 }
 
 int main() {
@@ -245,6 +292,34 @@ int main() {
                     cout << "No hay sistema de archivos cargado." << endl;
                 }   
             }
+            else if (comando == "mkdir") {
+                string folderName;
+                cin >> folderName;
+                Tree* newFolder = createNode(FOLDER_TYPE, folderName);
+                if (root) {
+                    // Agregar la nueva carpeta como hijo de la carpeta actual
+                    newFolder->father = root;
+                    newFolder->next = root->children;
+                    root->children = newFolder;
+                }
+                
+            } 
+            else if (comando == "rm") {
+                string itemName;
+                cin >> itemName;
+                eliminateItem(root, itemName);
+            }
+            else if(comando == "touch") {
+                string fileName;
+                cin >> fileName;  
+                Tree* newFile = createNode(FILE_TYPE, fileName);
+                if (root) {
+                    // Agregar el nuevo archivo como hijo de la carpeta actual
+                    newFile->father = root;
+                    newFile->next = root->children;
+                    root->children = newFile;
+                }
+            }  
             else if (comando == "exit") {
                 option = 0; // Salir del bucle
             } else {
