@@ -1,0 +1,9 @@
+Root/
+    Documents/
+        test.txt
+            "Este archivo es una prueba"
+    Music/
+        listo.txt
+            "Este archivo deberia guardar nombres de canciones"
+    Downloads/
+            

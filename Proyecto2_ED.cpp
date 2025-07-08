@@ -59,6 +59,10 @@ Tree* loadFileSystem(string& filename) {
     int currentIndentation = -1; // Para rastrear la profundidad de la indentación
 
     string line;
+    Tree* lastFileNode = nullptr;
+    int lastFileIndent = -1;
+    bool readingFileContent = false;
+
     while (getline(file, line)) {
         // Ignorar líneas vacías
         if (line.empty() || line.find_first_not_of(" \t") == string::npos) {
@@ -71,10 +75,24 @@ Tree* loadFileSystem(string& filename) {
 
         string trimmedLine = line.substr(firstChar); // Línea sin indentación
 
-        // Manejar el contenido de archivos (si tu formato lo permite)
-        // Esto es una simplificación; un formato más robusto para el contenido de archivos
-        // requeriría una lógica de estado más compleja (ej. "reading_file_content = true")
-        //if (currentFolder != nullptr && currentFolder->type == FILE_TYPE && trimmedLine == "---EOF---") 
+        if (readingFileContent) {
+            // Si la indentación es mayor que la del archivo, es contenido
+            if (indentation > lastFileIndent) {
+                File* fileData = static_cast<File*>(lastFileNode->data);
+                if (!fileData->content.empty()) fileData->content += "\n";
+                // Quitar posibles comillas al inicio y final
+                if (trimmedLine.front() == '"' && trimmedLine.back() == '"' && trimmedLine.size() > 1)
+                    trimmedLine = trimmedLine.substr(1, trimmedLine.size() - 2);
+                fileData->content += trimmedLine;
+                continue;
+            } else {
+                // Ya no es contenido, resetea el flag
+                readingFileContent = false;
+                lastFileNode = nullptr;
+                lastFileIndent = -1;
+                // No hagas continue, procesa la línea como carpeta o archivo
+            }
+        }
 
         if (trimmedLine.back() == '/') { // Es una carpeta
             string folderName = trimmedLine.substr(0, trimmedLine.length() - 1);
@@ -123,6 +141,10 @@ Tree* loadFileSystem(string& filename) {
                     currentIndentation = indentation;
                 }
             }
+            // Si era contenido de archivo, resetea
+            readingFileContent = false;
+            lastFileNode = nullptr;
+            lastFileIndent = -1;
         } else { // Es un archivo de texto plano
             std::string fileName = trimmedLine;
             Tree* newFileNode = createNode(FILE_TYPE, fileName);
@@ -144,10 +166,13 @@ Tree* loadFileSystem(string& filename) {
                     }
                     temp->next = newFileNode;
                 }
+                // Prepara para leer contenido de archivo
+                readingFileContent = true;
+                lastFileNode = newFileNode;
+                lastFileIndent = indentation;
             } else {
                 cerr << "Error: Archivo sin carpeta padre: " << fileName << endl;
             }
-
         }
     }
 
@@ -319,7 +344,7 @@ void renameFile(Tree* currentFolder, const string& oldName, const string& newNam
 
 
 int main() {
-    string filename = "Prueba.txt"; 
+    string filename = "directorio.txt"; 
     Tree* fileSystem = loadFileSystem(filename);
     Tree* root = fileSystem;
     int option = -1; // Variable para controlar el bucle de opciones
