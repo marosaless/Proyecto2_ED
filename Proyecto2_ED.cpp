@@ -210,8 +210,7 @@ Tree* findFolder(Tree* node, const string& folderName) {
     return findFolder(node->next, folderName);
 }
 
-void changeDirectory(Tree*& currentFolder, const string& folderName) {
-    // IMPLEMENTACION
+void changeDirectory(Tree*& currentFolder, Tree* root, const string& folderName) {
     if (folderName == "..") {
         if (currentFolder->father != nullptr) {
             currentFolder = currentFolder->father;
@@ -220,19 +219,12 @@ void changeDirectory(Tree*& currentFolder, const string& folderName) {
         }
         return;
     }
-
-    Tree* child = currentFolder->children;
-    while (child != nullptr) {
-        if (child->type == FOLDER_TYPE) {
-            Folder* folder = static_cast<Folder*>(child->data);
-            if (folder->name == folderName) {
-                currentFolder = child;
-                return;
-            }
-        }
-        child = child->next;
+    Tree* found = findFolder(root, folderName);
+    if (found) {
+        currentFolder = found;
+    } else {
+        cout << "No se encontro la carpeta: " << folderName << endl;
     }
-    cout << "No se encontro la carpeta: " << folderName << endl;
 }
 
 bool findNodeAndParent(Tree* node, const string& itemName, Tree*& parent, Tree*& found) {
@@ -353,7 +345,7 @@ int main() {
             else if (comando == "cd") {
                 string folderName;
                 cin >> folderName;
-                changeDirectory(root, folderName);
+                changeDirectory(root,fileSystem, folderName);
             }
             else if (comando == "ls") {
                 if (root) {
@@ -394,13 +386,13 @@ int main() {
             else if (comando == "cnfolder") {
                 string oldName, newName;
                 cin >> oldName >> newName;
-                renameFolder(root, oldName, newName);
+                renameFolder(fileSystem, oldName, newName);
             }
             // IMPLEMENTACION
             else if (comando == "cnfile") {
                 string oldName, newName;
                 cin >> oldName >> newName;
-                renameFile(root, oldName, newName);
+                renameFile(fileSystem, oldName, newName);
             }
             else if (comando == "exit") {
                 option = 0; // Salir del bucle
