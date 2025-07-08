@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <sstream> 
+#include <functional>
 #include <string>
 
 using namespace std;
@@ -341,6 +343,97 @@ void renameFile(Tree* currentFolder, const string& oldName, const string& newNam
     }
     cout << "No se encontro el archivo '" << oldName << "' en el directorio actual." << endl;
 }
+Tree* findChildNode(Tree* parent, const string& itemName) {
+    if (!parent || !parent->children) return nullptr;
+    Tree* currentChild = parent->children;
+    while (currentChild) {
+        if (currentChild->type == FOLDER_TYPE) {
+            Folder* folder = static_cast<Folder*>(currentChild->data);
+            if (folder->name == itemName) {
+                return currentChild;
+            }
+        } else { // FILE_TYPE
+            File* file = static_cast<File*>(currentChild->data);
+            if (file->name == itemName) {
+                return currentChild;
+            }
+        }
+        currentChild = currentChild->next;
+    }
+    return nullptr;
+}
+void editFileContent(Tree* currentFolder, const string& fileName) {
+    Tree* targetNode = findChildNode(currentFolder, fileName);
+    if (targetNode && targetNode->type == FILE_TYPE) {
+        File* file = static_cast<File*>(targetNode->data);
+        cout << "Contenido actual de '" << file->name << "':" << endl;
+        cout << "---START_CONTENT---" << endl;
+        cout << file->content << endl;
+        cout << "---END_CONTENT---" << endl;
+        cout << "Ingrese el nuevo contenido (escriba '---EOF---' en una linea nueva para guardar):" << endl;
+
+        string newContent = "";
+        string line;
+        cin.ignore(); // Consume the leftover newline character after reading fileName
+        while (getline(cin, line)) {
+            if (line == "---EOF---") {
+                break;
+            }
+            newContent += line + "\n";
+        }
+        // Remove the last newline character if it exists
+        if (!newContent.empty()) {
+            newContent.pop_back();
+        }
+        file->content = newContent;
+        cout << "Contenido de '" << file->name << "' actualizado." << endl;
+    } else {
+        cout << "No se encontro el archivo '" << fileName << "' en el directorio actual." << endl;
+    }
+}
+
+void guardarArchivo(Tree* node, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cerr << "No se pudo abrir el archivo para guardar." << endl;
+        return;
+    }
+
+    // Función recursiva auxiliar
+    function<void(Tree*, int)> saveNode = [&](Tree* n, int depth) {
+        if (!n) return;
+        string indent(depth * 4, ' '); // 4 espacios por nivel
+
+        if (n->type == FOLDER_TYPE) {
+            Folder* folder = static_cast<Folder*>(n->data);
+            file << indent << folder->name << "/" << endl;
+            Tree* child = n->children;
+            while (child) {
+                saveNode(child, depth + 1);
+                child = child->next;
+            }
+        } else { // FILE_TYPE
+            File* f = static_cast<File*>(n->data);
+            file << indent << f->name << endl;
+            if (!f->content.empty()) {
+                istringstream iss(f->content);
+                string line;
+                while (getline(iss, line)) {
+                    file << indent << "    ";
+                    // Si la línea contiene espacios, comillas o está vacía, la ponemos entre comillas
+                    bool needsQuotes = line.find(' ') != string::npos || line.empty() || line.front() == '"' || line.back() == '"';
+                    if (needsQuotes) file << '"';
+                    file << line;
+                    if (needsQuotes) file << '"';
+                    file << endl;
+                }
+            }
+        }
+    };
+
+    saveNode(node, 0);
+    file.close();
+}
 
 
 int main() {
@@ -408,6 +501,12 @@ int main() {
                 }
             }   
             // IMPLEMENTACION
+            else if (comando == "edit") {
+                string fileName;
+                cin >> fileName;
+                editFileContent(root, fileName); // 'root' here is the current working directory
+            }
+            // IMPLEMENTACION
             else if (comando == "cnfolder") {
                 string oldName, newName;
                 cin >> oldName >> newName;
@@ -420,6 +519,8 @@ int main() {
                 renameFile(fileSystem, oldName, newName);
             }
             else if (comando == "exit") {
+                guardarArchivo(fileSystem, filename); // Implementa esta función para guardar el sistema de archivos
+                cout << "Directorio guardado como: " << filename << endl;
                 option = 0; // Salir del bucle
             } else {
                 cout << "Comando no reconocido: " << comando << endl;

@@ -6,4 +6,3 @@ Root/
         listo.txt
             "Este archivo deberia guardar nombres de canciones"
     Downloads/
-            
